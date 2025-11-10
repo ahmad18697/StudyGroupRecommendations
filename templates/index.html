@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    /* Hero Section */
+    .hero {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 20%),
+                    radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 20%);
+        z-index: -1;
+    }
+
+    .hero-content {
+        max-width: 800px;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .hero h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+        background: linear-gradient(90deg, var(--primary), var(--accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+        font-size: 1.25rem;
+        color: var(--text-light);
+        margin-bottom: 2.5rem;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Upload Section */
+    .upload-container {
+        background: white;
+        border-radius: var(--rounded-lg);
+        padding: 3rem 2rem;
+        box-shadow: var(--shadow-lg);
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 2px dashed var(--gray-200);
+    }
+
+    .upload-container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .upload-icon {
+        font-size: 3rem;
+        color: var(--primary);
+        margin-bottom: 1.5rem;
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .file-label {
+        display: inline-block;
+        padding: 1rem 2rem;
+        background: var(--primary);
+        color: white;
+        border-radius: var(--rounded);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 1.5rem;
+    }
+
+    .file-label:hover {
+        background: var(--primary-light);
+        transform: translateY(-2px);
+    }
+
+    .file-name {
+        margin-top: 1rem;
+        font-size: 0.875rem;
+        color: var(--text-light);
+    }
+
+    .file-requirements {
+        margin-top: 2rem;
+        padding: 1rem;
+        background: var(--gray-100);
+        border-radius: var(--rounded);
+        font-size: 0.875rem;
+        color: var(--text-light);
+        text-align: left;
+    }
+
+    .file-requirements h4 {
+        color: var(--text);
+        margin-bottom: 0.5rem;
+    }
+
+    .file-requirements ul {
+        padding-left: 1.25rem;
+    }
+
+    .file-requirements li {
+        margin-bottom: 0.25rem;
+    }
+
+    .loading {
+        display: none;
+        margin-top: 2rem;
+    }
+
+    .loading-spinner {
+        width: 3rem;
+        height: 3rem;
+        border: 3px solid rgba(99, 102, 241, 0.2);
+        border-radius: 50%;
+        border-top-color: var(--primary);
+        animation: spin 1s ease-in-out infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .hero h1 {
+            font-size: 2.5rem;
+        }
+        
+        .hero p {
+            font-size: 1.1rem;
+        }
+        
+        .upload-container {
+            padding: 2rem 1.5rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .hero h1 {
+            font-size: 2rem;
+        }
+        
+        .hero p {
+            font-size: 1rem;
+        }
+        
+        .file-label {
+            width: 100%;
+            padding: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <div class="hero-content">
+        <h1>Find Your Perfect Study Partners</h1>
+        <p class="text-xl opacity-75">Powered by Agentic AI to connect you with ideal study groups based on courses, schedules, and learning needs.</p>
+        
+        <div class="upload-container" id="uploadContainer">
+            <div class="upload-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Upload Student Data</h3>
+            <p class="text-gray-600 mb-6">Drag & drop your CSV file or click to browse</p>
+            
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="file" id="fileInput" class="file-input" accept=".csv" required>
+                <label for="fileInput" class="file-label">
+                    <i class="fas fa-file-csv mr-2"></i> Select CSV File
+                </label>
+                <div id="fileName" class="file-name"></div>
+                
+                <div class="file-requirements">
+                    <h4>File Requirements:</h4>
+                    <ul>
+                        <li>CSV format with columns: name, course, grade_estimate, topics_needed, preferred_times</li>
+                        <li>Example row: John Doe,CS101,85,"Calculus, Algebra","Mon 10-12, Wed 2-4"</li>
+                    </ul>
+                </div>
+                
+                <div class="loading" id="loadingIndicator">
+                    <div class="loading-spinner"></div>
+                    <p>Analyzing academic profiles and forming optimal study groups…</p>
+                </div>
+                
+                <div class="mt-6">
+                    <button type="submit" class="btn btn-primary" id="analyzeBtn" disabled>
+                        <i class="fas fa-search mr-2"></i> Analyze & Match Students
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const uploadForm = document.getElementById('uploadForm');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const uploadContainer = document.getElementById('uploadContainer');
+    
+    // Handle file selection
+    fileInput.addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            fileName.textContent = this.files[0].name;
+            analyzeBtn.disabled = false;
+        } else {
+            fileName.textContent = '';
+            analyzeBtn.disabled = true;
+        }
+    });
+    
+    // Handle drag and drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadContainer.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadContainer.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadContainer.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight() {
+        uploadContainer.classList.add('border-primary', 'border-2');
+    }
+    
+    function unhighlight() {
+        uploadContainer.classList.remove('border-primary', 'border-2');
+    }
+    
+    // Handle file drop
+    uploadContainer.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length) {
+            fileInput.files = files;
+            fileName.textContent = files[0].name;
+            analyzeBtn.disabled = false;
+        }
+    }
+    
+    // Handle form submission
+    uploadForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const file = fileInput.files[0];
+        if (!file) return;
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        // Show loading state
+        loadingIndicator.style.display = 'block';
+        analyzeBtn.disabled = true;
+        
+        try {
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Store results in sessionStorage for the results page
+                sessionStorage.setItem('analysisResults', JSON.stringify(data));
+                // Redirect to results page
+                window.location.href = '/results';
+            } else {
+                throw new Error(data.error || 'Failed to process file');
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+            console.error('Upload error:', error);
+        } finally {
+            loadingIndicator.style.display = 'none';
+            analyzeBtn.disabled = false;
+        }
+    });
+});
+</script>
+{% endblock %}

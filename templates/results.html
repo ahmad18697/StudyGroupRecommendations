@@ -1,0 +1,475 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .results-container {
+        padding: 4rem 0;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: var(--primary);
+    }
+
+    .page-subtitle {
+        font-size: 1.25rem;
+        color: var(--text-light);
+        max-width: 700px;
+        margin: 0 auto 2rem;
+    }
+
+    .groups-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .group-card {
+        background: white;
+        border-radius: var(--rounded-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .group-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .group-header {
+        background: var(--primary);
+        color: white;
+        padding: 1.25rem;
+        position: relative;
+    }
+
+    .group-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .group-score {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .group-body {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .members-list {
+        margin-bottom: 1.5rem;
+    }
+
+    .member-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .member-item:last-child {
+        border-bottom: none;
+    }
+
+    .member-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .member-details {
+        flex-grow: 1;
+    }
+
+    .member-name {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .member-meta {
+        display: flex;
+        gap: 0.75rem;
+        font-size: 0.875rem;
+        color: var(--text-light);
+    }
+
+    .grade-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .grade-a { background-color: #D1FAE5; color: #065F46; }
+    .grade-b { background-color: #DBEAFE; color: #1E40AF; }
+    .grade-c { background-color: #FEF3C7; color: #92400E; }
+    .grade-d { background-color: #FEE2E2; color: #991B1B; }
+    .grade-f { background-color: #F3F4F6; color: #4B5563; }
+
+    .topics-section {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--gray-200);
+    }
+
+    .topics-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-light);
+        margin-bottom: 0.75rem;
+    }
+
+    .topics-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .topic-tag {
+        background: var(--gray-100);
+        color: var(--text);
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    .topic-tag:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .reason-toggle {
+        background: none;
+        border: none;
+        color: var(--primary);
+        font-weight: 500;
+        cursor: pointer;
+        padding: 0.5rem 0;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: auto;
+    }
+
+    .reason-toggle i {
+        transition: transform 0.2s ease;
+    }
+
+    .reason-toggle[aria-expanded="true"] i {
+        transform: rotate(180deg);
+    }
+
+    .reason-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+        background: var(--gray-50);
+        border-radius: var(--rounded);
+        margin-top: 0.5rem;
+    }
+
+    .reason-content-inner {
+        padding: 1rem;
+    }
+
+    .reason-content[aria-hidden="false"] {
+        max-height: 200px;
+    }
+
+    .actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-download {
+        background: var(--accent);
+        color: white;
+    }
+
+    .btn-download:hover {
+        background: var(--accent-light);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: var(--rounded-lg);
+        box-shadow: var(--shadow);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        color: var(--gray-200);
+        margin-bottom: 1.5rem;
+    }
+
+    .empty-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--text);
+    }
+
+    .empty-text {
+        color: var(--text-light);
+        margin-bottom: 1.5rem;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    @media (max-width: 768px) {
+        .groups-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+        }
+        
+        .page-subtitle {
+            font-size: 1.1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Study Group Recommendations</h1>
+            <p class="page-subtitle">We've analyzed the data and created optimal study groups based on courses, schedules, and learning needs.</p>
+        </div>
+
+        <div id="groupsContainer" class="groups-grid">
+            <!-- Groups will be inserted here by JavaScript -->
+        </div>
+
+        <div class="actions">
+            <button id="downloadBtn" class="btn btn-download">
+                <i class="fas fa-download mr-2"></i> Download All Groups
+            </button>
+            <a href="/" class="btn btn-outline">
+                <i class="fas fa-undo mr-2"></i> Upload Another File
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const groupsContainer = document.getElementById('groupsContainer');
+    const downloadBtn = document.getElementById('downloadBtn');
+    
+    // Get results from sessionStorage
+    const results = JSON.parse(sessionStorage.getItem('analysisResults') || '{}');
+    const groups = results.recommended_groups || [];
+    const isolatedStudents = results.isolated_students || [];
+    
+    // If no groups found, show empty state
+    if (groups.length === 0) {
+        groupsContainer.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-users-slash"></i>
+                </div>
+                <h2 class="empty-title">No Groups Formed</h2>
+                <p class="empty-text">
+                    We couldn't form any study groups based on the provided data. 
+                    Please check your CSV file and try again.
+                </p>
+                <a href="/" class="btn btn-primary">
+                    <i class="fas fa-upload mr-2"></i> Upload New File
+                </a>
+            </div>
+        `;
+        downloadBtn.style.display = 'none';
+        return;
+    }
+    
+    // Render groups
+    groups.forEach((group, index) => {
+        const groupElement = document.createElement('div');
+        groupElement.className = 'group-card fade-in';
+        groupElement.style.animationDelay = `${index * 0.1}s`;
+        
+        // Calculate match score (for demo purposes, using a random score if not provided)
+        const matchScore = group.match_score || Math.floor(Math.random() * 20) + 80;
+        
+        // Get unique topics
+        const topics = [];
+        group.members.forEach(member => {
+            if (member.topics_needed && Array.isArray(member.topics_needed)) {
+                member.topics_needed.forEach(topic => {
+                    if (!topics.includes(topic)) {
+                        topics.push(topic);
+                    }
+                });
+            }
+        });
+        
+        groupElement.innerHTML = `
+            <div class="group-header">
+                <h2 class="group-title">
+                    ${group.group_id || `Group ${index + 1}`}
+                    <span class="group-score">${matchScore}% Match</span>
+                </h2>
+                <div class="text-sm opacity-75">${group.course || 'General Studies'}</div>
+            </div>
+            <div class="group-body">
+                <div class="members-list">
+                    ${group.members.map(member => {
+                        const firstLetter = member.name ? member.name.charAt(0).toUpperCase() : '?';
+                        const grade = member.grade_estimate || 0;
+                        let gradeClass = 'grade-f';
+                        
+                        if (grade >= 90) gradeClass = 'grade-a';
+                        else if (grade >= 80) gradeClass = 'grade-b';
+                        else if (grade >= 70) gradeClass = 'grade-c';
+                        else if (grade >= 60) gradeClass = 'grade-d';
+                        
+                        return `
+                            <div class="member-item">
+                                <div class="member-avatar">${firstLetter}</div>
+                                <div class="member-details">
+                                    <div class="member-name">${member.name || 'Unknown Student'}</div>
+                                    <div class="member-meta">
+                                        <span class="grade-badge ${gradeClass}">Grade: ${grade || 'N/A'}</span>
+                                        <span><i class="far fa-clock mr-1"></i> ${member.preferred_times || 'Flexible'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                
+                ${topics.length > 0 ? `
+                    <div class="topics-section">
+                        <div class="topics-title">Topics</div>
+                        <div class="topics-list">
+                            ${topics.slice(0, 5).map(topic => 
+                                `<span class="topic-tag" title="${topic}">${topic}</span>`
+                            ).join('')}
+                            ${topics.length > 5 ? `<span class="topic-tag">+${topics.length - 5} more</span>` : ''}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${group.reason ? `
+                    <button class="reason-toggle" aria-expanded="false" aria-controls="reason-${index}">
+                        <span>Why this group?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="reason-content" id="reason-${index}" aria-hidden="true">
+                        <div class="reason-content-inner">
+                            <p>${group.reason}</p>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+        
+        groupsContainer.appendChild(groupElement);
+    });
+    
+    // Add event listeners for reason toggles
+    document.querySelectorAll('.reason-toggle').forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const expanded = this.getAttribute('aria-expanded') === 'true' || false;
+            this.setAttribute('aria-expanded', !expanded);
+            const content = document.getElementById(this.getAttribute('aria-controls'));
+            content.setAttribute('aria-hidden', expanded);
+        });
+    });
+    
+    // Handle download button
+    downloadBtn.addEventListener('click', function() {
+        // Create a JSON file with all group data
+        const dataStr = JSON.stringify(results, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = `study-groups-${new Date().toISOString().split('T')[0]}.json`;
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    });
+    
+    // Show isolated students if any
+    if (isolatedStudents.length > 0) {
+        const isolatedSection = document.createElement('div');
+        isolatedSection.className = 'isolated-students mt-8';
+        isolatedSection.innerHTML = `
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-yellow-800">
+                            We couldn't find perfect matches for ${isolatedStudents.length} student${isolatedStudents.length > 1 ? 's' : ''}
+                        </h3>
+                        <div class="mt-2 text-sm text-yellow-700">
+                            <ul class="list-disc pl-5 space-y-1">
+                                ${isolatedStudents.map(student => 
+                                    `<li>${student.name}: ${student.recommendation || 'No specific recommendation available.'}</li>`
+                                ).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        groupsContainer.parentNode.insertBefore(isolatedSection, groupsContainer.nextSibling);
+    }
+});
+</script>
+{% endblock %}
